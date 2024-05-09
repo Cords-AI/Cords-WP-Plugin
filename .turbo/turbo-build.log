@@ -1,0 +1,8 @@
+[0m[2m[35m$[0m [2m[1mwp-scripts build[0m
+asset [1m[32mindex.js[39m[22m 2.66 KiB [1m[32m[emitted][39m[22m [1m[32m[minimized][39m[22m (name: index)
+asset [1m[32mindex.asset.php[39m[22m 112 bytes [1m[32m[emitted][39m[22m (name: index)
+Entrypoint [1mindex[39m[22m 2.77 KiB = [1m[32mindex.js[39m[22m 2.66 KiB [1m[32mindex.asset.php[39m[22m 112 bytes
+orphan modules 3.27 KiB [1m[33m[orphan][39m[22m 3 modules
+runtime modules 663 bytes 3 modules
+[1m./src/index.js + 3 modules[39m[22m 3.5 KiB [1m[31m[not cacheable][39m[22m [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
+webpack 5.91.0 compiled [1m[32msuccessfully[39m[22m in 916 ms
