@@ -207,8 +207,6 @@ module.exports = window["wp"]["element"];
 /******/ 	
 /************************************************************************/
 var __webpack_exports__ = {};
-// This entry need to be wrapped in an IIFE because it need to be isolated against other modules in the chunk.
-(() => {
 /*!**********************!*\
   !*** ./src/index.js ***!
   \**********************/
@@ -222,8 +220,6 @@ __webpack_require__.r(__webpack_exports__);
 
 // Render the App component into the DOM
 (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.render)((0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)(_App__WEBPACK_IMPORTED_MODULE_1__["default"], null), document.getElementById("cords"));
-})();
-
 /******/ })()
 ;
 //# sourceMappingURL=index.js.map
