@@ -35,6 +35,32 @@ function cords_register_values()
 	add_option("cords_api_key", "");
 }
 
+// INDEXING //
+add_action('template_redirect', 'cords_check_cookie_and_redirect');
+function cords_check_cookie_and_redirect()
+{
+	// Check if the 'cords-id' query parameter is set
+	if (isset($_GET['cordsId'])) {
+		$cordsId = sanitize_text_field($_GET['cordsId']);
+
+		// Set the 'cords-id' cookie for 30 days
+		setcookie('cords-id', $cordsId, time() + (86400 * 30), "/", false, wp_get_environment_type() === "local" ? false : true, true);
+
+		// Prepare the URL to redirect to (same URL but without the 'cordsId' query parameter)
+		$redirect_url = remove_query_arg('cordsId');
+
+		// Redirect to clear the 'cords-id' query parameter from the URL
+		wp_redirect($redirect_url);
+		exit();
+	}
+	if (!isset($_COOKIE['cords-id'])) {
+		$origin = wp_get_environment_type() === "local" ? "http://localhost:3000" : "https://cords-widget.pages.dev";
+		$redirect_url = is_singular() ? get_permalink() : home_url();
+		wp_redirect($origin . '/login?redirect=' . urlencode($redirect_url));
+		exit();
+	}
+}
+
 // ADMIN MENU //
 add_action('admin_menu', 'cords_init_menu');
 function cords_init_menu()
@@ -75,13 +101,36 @@ function enqueue_cords_widget_script()
 	$show_widget = get_post_meta($post_id, 'cords_widget', true);
 
 	if ($show_widget) {
-		$post_content = strip_tags(get_the_content());
-		$encoded_post_content = urlencode($post_content);
 		$api_key = get_option('cords_api_key');
-		$origin = wp_get_environment_type() === "local" ? "http://localhost:3000" : "https://cords-widget.vercel.app";
-		$url = $origin . "?q=" . $encoded_post_content . "&api_key=" . $api_key;
+		$origin = wp_get_environment_type() === "local" ? "http://localhost:3000" : "https://cords-widget.pages.dev";
 ?>
 		<script>
+			function extractPageText(htmlContent) {
+				// Create a new DOM element
+				const parser = new DOMParser();
+				const doc = parser.parseFromString(htmlContent, 'text/html');
+
+				// Selectors for tags to remove
+				const selectorsToRemove = ['nav', 'a', 'header', 'footer', "script", "form", "button", "a"];
+
+				// Function to recursively remove elements matching any selector
+				function removeElements(element) {
+					Array.from(element.querySelectorAll('*')).forEach(child => {
+						if (selectorsToRemove.some(selector => child.matches(selector))) {
+							child.remove();
+						} else {
+							removeElements(child);
+						}
+					});
+				}
+
+				// Remove elements from the document
+				removeElements(doc.body);
+
+				// Extract and return the cleaned-up text content
+				return doc.body.textContent || "";
+			}
+
 			// Resize widget to fit content
 			window.addEventListener("message", function(event) {
 				if (event.data.type !== "cords-resize") return;
@@ -92,12 +141,14 @@ function enqueue_cords_widget_script()
 			// Create widget
 			document.addEventListener('DOMContentLoaded', function() {
 				let iframe = document.createElement('iframe');
-				iframe.src = '<?php echo $url; ?>';
-				iframe.style.cssText = 'pointer-events: all; background: none; border: 0px; float: none; position: absolute; inset: 0px; width: 100%; height: 100%; margin: 0px; padding: 0px; min-height: 0px;';
+				const postContent = extractPageText(document.body.innerHTML);
+				// Assuming $origin and $api_key are already defined in PHP and passed correctly into JavaScript
+				iframe.src = '<?php echo $origin; ?>' + "?q=" + postContent + "&api_key=" + '<?php echo $api_key; ?>' + "&cordsId=" + '<?php echo $_COOKIE['cords-id']; ?>';
+				iframe.style.cssText = 'pointer-events: all; background: none; border: 0px; float: none; position: absolute; inset: 0px; width: 100%; height: 100%; margin: 0px; padding: 0px; min-height: 0px; overscroll-behavior: contain';
 
 				let widgetContainer = document.createElement('div');
 				widgetContainer.id = 'cords-widget';
-				widgetContainer.style.cssText = 'border: 0px; background-color: transparent; pointer-events: none; z-index: 2147483639; position: fixed; bottom: 0px; width: 60px; height: 60px; overflow: hidden; opacity: 1; max-width: 100%; right: 0px; max-height: 100%;';
+				widgetContainer.style.cssText = 'border: 0px; background-color: transparent; pointer-events: none; z-index: 2147483639; position: fixed; bottom: 0px; width: 60px; height: 60px; overflow: auto; opacity: 1; max-width: 100%; right: 0px; max-height: 100%; overscroll-behavior: contain';
 
 				widgetContainer.appendChild(iframe);
 				document.body.appendChild(widgetContainer);
