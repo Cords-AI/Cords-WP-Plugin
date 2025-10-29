@@ -72,7 +72,7 @@ const App = () => {
 	};
 
 	return (
-		<div>
+		<div style={{ paddingRight: "1rem" }}>
 			<h1>CORDS</h1>
 			<p>Welcome to the CORDS admin dashboard.</p>
 			<hr />
