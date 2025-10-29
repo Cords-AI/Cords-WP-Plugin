@@ -27,20 +27,49 @@ const App = () => {
 		api_key: "",
 	});
 	const [load, setLoad] = useState(true);
+	const [currentPage, setCurrentPage] = useState(1);
+	const [totalPages, setTotalPages] = useState(1);
+	const perPage = 10; // show 10 items per page
 
 	useEffect(() => {
-		apiFetch({
-			path: "/wp/v2/pages",
-		}).then((pages) => {
-			setPages(pages);
-		});
-		apiFetch({
-			path: "/cords/v1/options",
-		}).then((options) => {
-			setOptions(options);
-		});
-		setLoad(false);
+		const fetchData = async () => {
+			// Fetch pages with pagination
+			const response = await apiFetch({
+				path: `/wp/v2/pages?page=${currentPage}&per_page=${perPage}`,
+				parse: false, // we need headers
+			});
+
+			const data = await response.json();
+
+			// Get total pages from response headers
+			const total = parseInt(response.headers.get("X-WP-TotalPages"), 10);
+			setTotalPages(total);
+
+			setPages(data);
+
+			// Fetch your options as before
+			const opts = await apiFetch({ path: "/cords/v1/options" });
+			setOptions(opts);
+
+			setLoad(false);
+		};
+
+		fetchData();
 	}, [load]);
+
+	const nextPage = () => {
+		if (currentPage < totalPages) {
+			setCurrentPage(currentPage + 1);
+			setLoad(true);
+		}
+	};
+
+	const prevPage = () => {
+		if (currentPage > 1) {
+			setCurrentPage(currentPage - 1);
+			setLoad(true);
+		}
+	};
 
 	return (
 		<div>
@@ -107,6 +136,26 @@ const App = () => {
 						))}
 				</tbody>
 			</table>
+			{/* Pagination Controls */}
+			<div style={{ marginTop: "1rem", display: "flex", alignItems: "center", gap: "1rem" }}>
+				<button
+					onClick={prevPage}
+					disabled={currentPage === 1}
+					className="button"
+				>
+					← Previous
+				</button>
+				<span>
+					Page {currentPage} of {totalPages}
+				</span>
+				<button
+					onClick={nextPage}
+					disabled={currentPage === totalPages}
+					className="button"
+				>
+					Next →
+				</button>
+			</div>
 			<h3>API Key</h3>
 			<p>
 				Enter your CORDS API key below. This can be found at{" "}
