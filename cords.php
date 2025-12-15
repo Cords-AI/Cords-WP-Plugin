@@ -105,6 +105,27 @@ function enqueue_cords_widget_script()
 				return doc.body.textContent || "";
 			}
 
+			function extractLanguage() {
+				const locales = ["en", "fr"];
+				const url = new URL(window.location.href);
+
+				// Check for search parameter
+				const searchlang = url.searchParams.get("lang");
+				if (locales.includes(searchlang)) {
+					return searchlang;
+				}
+
+
+				// Check for locale in path
+				for (const locale of locales) {
+					if (url.pathname.startsWith(`/${locale}/`) || url.pathname.endsWith(`/${locale}`)) {
+						return locale;
+					}
+				}
+
+				return "en";
+			}
+
 			// Resize widget to fit content
 			window.addEventListener("message", function(event) {
 				if (event.data.type !== "cords-resize") return;
@@ -117,9 +138,11 @@ function enqueue_cords_widget_script()
 			document.addEventListener('DOMContentLoaded', function() {
 				let iframe = document.createElement('iframe');
 				const postContent = extractPageText(document.body.innerHTML);
+				const lang = extractLanguage();
+				console.log("Extracted language: " + lang);
 				iframe.allow = 'geolocation';
 				// Assuming $origin and $api_key are already defined in PHP and passed correctly into JavaScript
-				iframe.src = '<?php echo $origin; ?>' + "?q=" + postContent + "&api_key=" + '<?php echo $api_key; ?>';
+				iframe.src = '<?php echo $origin; ?>' + "?q=" + postContent + "&api_key=" + '<?php echo $api_key; ?>' + "&lang=" + lang;
 				iframe.style.cssText = 'pointer-events: all; background: none; border: 0px; float: none; position: absolute; inset: 0px; width: 100%; height: 100%; margin: 0px; padding: 0px; min-height: 0px; overscroll-behavior: contain';
 
 				let widgetContainer = document.createElement('div');
