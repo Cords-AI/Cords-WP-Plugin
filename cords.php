@@ -85,7 +85,7 @@ function enqueue_cords_widget_script()
 				const doc = parser.parseFromString(htmlContent, 'text/html');
 
 				// Selectors for tags to remove
-				const selectorsToRemove = ['nav', 'a', 'header', 'footer', "script", "form", "button", "a"];
+				const selectorsToRemove = ['nav', 'a', 'header', 'footer', "script", "form", "button", "a", "style"];
 
 				// Function to recursively remove elements matching any selector
 				function removeElements(element) {
@@ -137,18 +137,16 @@ function enqueue_cords_widget_script()
 			// Create widget
 			document.addEventListener('DOMContentLoaded', function() {
 				let iframe = document.createElement('iframe');
-				const postContent = extractPageText(document.body.innerHTML);
+				const rawContent = extractPageText(document.body.innerHTML);
+				const postContent = rawContent.replace(/\s+/g, ' ').trim().slice(0, 2000);
 				const lang = extractLanguage();
 				console.log("Extracted language: " + lang);
 				iframe.allow = 'geolocation';
-				// Assuming $origin and $api_key are already defined in PHP and passed correctly into JavaScript
-				iframe.src = '<?php echo $origin; ?>' + "?q=" + postContent + "&api_key=" + '<?php echo $api_key; ?>' + "&lang=" + lang;
+				iframe.src = '<?php echo $origin; ?>' + "?q=" + encodeURIComponent(postContent) + "&api_key=" + '<?php echo $api_key; ?>' + "&lang=" + lang;
 				iframe.style.cssText = 'pointer-events: all; background: none; border: 0px; float: none; position: absolute; inset: 0px; width: 100%; height: 100%; margin: 0px; padding: 0px; min-height: 0px; overscroll-behavior: contain';
-
 				let widgetContainer = document.createElement('div');
 				widgetContainer.id = 'cords-widget';
 				widgetContainer.style.cssText = 'border: 0px; background-color: transparent; pointer-events: none; z-index: 2147483639; position: fixed; bottom: 0px; width: 60px; height: 60px; overflow: auto; opacity: 1; max-width: 100%; right: 0px; max-height: 100%; overscroll-behavior: contain';
-
 				widgetContainer.appendChild(iframe);
 				document.body.appendChild(widgetContainer);
 			});
